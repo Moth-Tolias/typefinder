@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/typefinder
+typefinder.so
+typefinder.dylib
+typefinder.dll
+typefinder.a
+typefinder.lib
+typefinder-test-*
+*.exe
+*.o
+*.obj
+*.lst

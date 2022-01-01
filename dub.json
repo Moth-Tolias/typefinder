@@ -1,0 +1,10 @@
+{
+	"authors": [
+		"Su"
+	],
+	"copyright": "Copyright © 2021, Su",
+	"description": "type effectiveness calculator",
+	"license": "AGPL 3.0 or later",
+	"name": "typefinder",
+	"stringImportPaths": ["./", "source"]
+}
