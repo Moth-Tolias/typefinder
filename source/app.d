@@ -17,9 +17,9 @@ TypeCombo[] typeCombinations() @safe pure nothrow
 {
 	TypeCombo[] result;
 
-	for(TypeId firstTypeId = 0; firstTypeId < noOfTypes; ++firstTypeId)
+	for(size_t firstTypeId = 0; firstTypeId < noOfTypes; ++firstTypeId)
 	{
-		for(TypeId secondTypeId = 0; secondTypeId < noOfTypes; ++secondTypeId)
+		for(size_t secondTypeId = 0; secondTypeId < noOfTypes; ++secondTypeId)
 		{
 			immutable combo = TypeCombo(firstTypeId, secondTypeId);
 			if (!canFind(result, combo))
@@ -104,14 +104,12 @@ enum Effectiveness : float
 	Immune = 0
 }
 
-alias TypeId = size_t;
-
 enum maxNoOfTypes = 32;
 
 struct Type
 {
 	string name;
-	TypeId id;
+	size_t id;
 	Effectiveness[maxNoOfTypes] defenses;
 }
 
@@ -161,12 +159,12 @@ mixin template OrderlessStaticArray(alias T, alias maxLength)
 
 struct TypeCombo
 {
-	mixin OrderlessStaticArray!(TypeId, 2);
+	mixin OrderlessStaticArray!(size_t, 2);
 
 	string toString() @safe nothrow const pure
 	{
 		string result;
-		foreach(TypeId typeId; contents[0 .. length])
+		foreach(size_t typeId; contents[0 .. length])
 		{
 			result ~= types[typeId].name;
 		}
@@ -208,11 +206,11 @@ struct Party
 	}
 }
 
-float effectiveness(in TypeId attack, in TypeCombo defender) @safe @nogc nothrow pure
+float effectiveness(in size_t attack, in TypeCombo defender) @safe @nogc nothrow pure
 {
 	float result = 1;
 
-	foreach(TypeId id; defender.contents[0 .. defender.length])
+	foreach(size_t id; defender.contents[0 .. defender.length])
 	{
 		immutable Type type = types[id];
 		result *= type.defenses[attack];
@@ -221,7 +219,7 @@ float effectiveness(in TypeId attack, in TypeCombo defender) @safe @nogc nothrow
 	return result;
 }
 
-private TypeId[string] nameToId;
+private size_t[string] nameToId;
 
 immutable size_t noOfTypes;
 immutable Type[maxNoOfTypes] types;
@@ -230,7 +228,7 @@ shared static this()
 	auto jsonTypes = parseJSON(import("default.json"))["types"].arrayNoRef;
 
 	size_t count;
-	foreach(TypeId typeId, JSONValue jsonType; jsonTypes)
+	foreach(size_t typeId, JSONValue jsonType; jsonTypes)
 	{
 		auto name = jsonType["name"].str;
 		nameToId[name] = typeId;
@@ -240,7 +238,7 @@ shared static this()
 	noOfTypes = count;
 
 	Type[maxNoOfTypes] tempTypes;
-	foreach(TypeId typeId, JSONValue jsonType; jsonTypes)
+	foreach(size_t typeId, JSONValue jsonType; jsonTypes)
 	{
 		Type type;
 		type.name = jsonType["name"].str;
