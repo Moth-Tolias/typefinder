@@ -11,6 +11,10 @@ void main()
 	{
 		writeln(result[i]);
 	}
+
+	writeln();
+
+	findBestParty();
 }
 
 TypeCombo[] typeCombinations() @safe pure nothrow
@@ -58,13 +62,17 @@ TypeComboAndScore[] findTypeComboScores() @safe pure nothrow
 	return scores;
 }
 
-Party findBestParty()
+Party findBestParty() @safe pure nothrow
 {
-	TypeCombo[] typeCombinations;
+	debug
+	{
+		write("start");
+	}
+
+	immutable typeCombinations = typeCombinations();
 
 	Party best;
 	size_t count;
-	writeln();
 	foreach(TypeCombo combo1; typeCombinations)
 	{
 		foreach(TypeCombo combo2; typeCombinations)
@@ -78,14 +86,18 @@ Party findBestParty()
 						foreach(TypeCombo combo6; typeCombinations)
 						{
 							auto party = Party(combo1, combo2, combo3, combo4, combo5, combo6);
-							if (best.score > party.score)
+							if (best.score < party.score)
 							{
 								best = party;
-							}
-						}
-						++count;
 
-						write("\r", count, best);
+								debug
+								{
+									write("\r", "checked: ", count, " score: ", best.score, " ", best);
+								}
+							}
+
+							++count;
+						}
 					}
 				}
 			}
@@ -116,7 +128,7 @@ struct Type
 struct TypeComboAndScore
 {
 	TypeCombo combo;
-	float score;
+	float score = 0;
 }
 
 mixin template OrderlessStaticArray(alias T, alias maxLength)
@@ -176,9 +188,9 @@ struct Party
 {
 	mixin OrderlessStaticArray!(TypeCombo, 6);
 
-	float score()
+	float score() @safe pure nothrow
 	{
-		float result;
+		float result = 0;
 		foreach(TypeCombo combo; contents[0 .. length])
 		{
 			int[maxNoOfTypes] comboScore = 1;
