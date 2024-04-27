@@ -4,74 +4,97 @@ import std.algorithm;
 
 void main()
 {
-	TypeCombo[] typeCombinations;
-	TypeComboAndScore[] scores;
+	auto typeComboScores = findTypeComboScores();
+
+	auto result = typeComboScores.sort!("a.score < b.score");
+	for (ubyte i = 0; i < 10; ++i)
+	{
+		writeln(result[i]);
+	}
+}
+
+TypeCombo[] typeCombinations() @safe pure nothrow
+{
+	TypeCombo[] result;
 
 	for(TypeId firstTypeId = 0; firstTypeId < noOfTypes; ++firstTypeId)
 	{
 		for(TypeId secondTypeId = 0; secondTypeId < noOfTypes; ++secondTypeId)
 		{
 			immutable combo = TypeCombo(firstTypeId, secondTypeId);
-			if (!canFind(typeCombinations, combo))
+			if (!canFind(result, combo))
 			{
-			
-				int score;
-				foreach(Type type; types[0 .. noOfTypes])
-				{
-					auto e = effectiveness(nameToId[type.name], combo);
-					if(e > 1)
-					{
-						score += 1;
-					}
-					if (e < 1)
-					{
-						score -= 1;
-					}
-				}
-
-				typeCombinations ~= combo;
-				scores ~= (TypeComboAndScore(combo, score));
+				result ~= combo;
 			}
 		}
 	}
 
-	auto result = scores.sort!("a.score < b.score");
-	for (ubyte i = 0; i < 10; ++i)
+	return result;
+}
+
+TypeComboAndScore[] findTypeComboScores() @safe pure nothrow
+{
+	TypeComboAndScore[] scores;
+
+	foreach(typeCombo; typeCombinations())
 	{
-		writeln(result[i]);	
+		int score;
+		foreach(Type type; types[0 .. noOfTypes])
+		{
+			auto e = effectiveness(type.id, typeCombo);
+			if(e > 1)
+			{
+				score += 1;
+			}
+			if (e < 1)
+			{
+				score -= 1;
+			}
+		}
+
+		scores ~= (TypeComboAndScore(typeCombo, score));
 	}
 
-	/*assert(false, "do not run this. it /will/ destroy your computer.");
-	Party[] huge;
+	return scores;
+}
+
+Party findBestParty()
+{
+	TypeCombo[] typeCombinations;
+
+	Party best;
+	size_t count;
+	writeln();
 	foreach(TypeCombo combo1; typeCombinations)
 	{
 		foreach(TypeCombo combo2; typeCombinations)
 		{
 			foreach(TypeCombo combo3; typeCombinations)
 			{
-				foreach(size_t half, TypeCombo combo4; typeCombinations)
+				foreach(TypeCombo combo4; typeCombinations)
 				{
 					foreach(TypeCombo combo5; typeCombinations)
 					{
 						foreach(TypeCombo combo6; typeCombinations)
 						{
 							auto party = Party(combo1, combo2, combo3, combo4, combo5, combo6);
-							//if (!canFind(huge, party))
+							if (best.score > party.score)
 							{
-								huge ~= party;
+								best = party;
 							}
 						}
-//						writeln("piss");
+						++count;
+
+						write("\r", count, best);
 					}
-					writeln(half);
 				}
 			}
 		}
 	}
 
-	writeln(huge.length);*/
-
+	return best;
 }
+
 
 enum Effectiveness : float
 {
@@ -88,6 +111,7 @@ enum maxNoOfTypes = 32;
 struct Type
 {
 	string name;
+	TypeId id;
 	Effectiveness[maxNoOfTypes] defenses;
 }
 
@@ -102,7 +126,7 @@ mixin template OrderlessStaticArray(alias T, alias maxLength)
 	size_t length;
 	T[maxLength] contents;
 
-	invariant(length > 0 && length <= contents.length, "array may not be empty");
+	invariant(length <= contents.length, "overflow");
 	invariant
 	{
 		foreach(count, T element; contents[0 .. length])
@@ -172,7 +196,7 @@ struct Party
 					//comboScore[i]score -= 1;
 				}
 			}
-			
+
 			long bepis = 1;
 			foreach(int i; comboScore[0 .. noOfTypes])
 			{
@@ -220,6 +244,7 @@ shared static this()
 	{
 		Type type;
 		type.name = jsonType["name"].str;
+		type.id = typeId;
 
 		setTypeDefencesFromList(type, jsonType["resists"].arrayNoRef, Effectiveness.Resists);
 		setTypeDefencesFromList(type, jsonType["weaknesses"].arrayNoRef, Effectiveness.WeakTo);
